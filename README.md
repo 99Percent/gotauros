@@ -1,4 +1,11 @@
-# How to Use #
+# Go Tauros API
+
+Golang wrapper to access Tauros REST API endpoints
+
+
+
+
+# Usage #
 
 ## Obtain api key and api secret ##
 
@@ -17,8 +24,32 @@ To run create a json file ```tokens.json``` like this
 ```json
 {
   "email" : "[email of account]",
-  "api_key" : "[api_key from tauros]",
+  "api_key" : "[api key from tauros]",
   "api_secret" : "[api secret from tauros]",
-  "URL": "[https://staging.tauros.io] (sandbox) [https://tauros.io] (live)"
+  "URL": "[https://staging.tauros.io] (sandbox) OR [https://tauros.io] (live)"
 }
+```
+## Example:
+
+```golang
+import (
+  "encoding/json"
+  "io/ioutil"
+  "log"
+  "github.com/99Percent/gotauros"
+)
+// declare tauros object
+  var tauros TauApi
+// get API credentials from token json file
+	in, err := ioutil.ReadFile("tokens.json")
+	if err != nil {
+		log.Fatalf("Unable to load tokens file tokens.json: %v", err)
+	}
+	if err := json.Unmarshal(in, &tauros); err != nil {
+		log.Fatalf("Unable to unmarshall tokens file: %v", err)
+  }
+// use tauros object
+  coins, _ := tauros.Getcoins()
+  log.Printf("Available coins: %v",coins)
+
 ```
