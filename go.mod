@@ -1,3 +1,3 @@
-module github.com/99percent/gotauros/taurosapi
+module github.com/99percent/gotauros
 
 go 1.14
