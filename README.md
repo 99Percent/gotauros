@@ -26,7 +26,7 @@ To run create a json file ```tokens.json``` like this
   "email" : "[email of account]",
   "api_key" : "[api key from tauros]",
   "api_secret" : "[api secret from tauros]",
-  "URL": "[https://staging.tauros.io] (sandbox) OR [https://tauros.io] (live)"
+  "URL": "[https://api.staging.tauros.io] (sandbox) OR [https://api.tauros.io] (live)"
 }
 ```
 ## Example:

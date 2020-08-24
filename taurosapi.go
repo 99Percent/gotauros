@@ -236,6 +236,9 @@ func (t *TauAPI) CreateWebhook(webhook Webhook) (ID int64, error error) {
 	if err != nil {
 		return 0, nil
 	}
+	if string(jsonData) == "[\"Limit reached\"]" {
+		return 0, fmt.Errorf("Limit of webhooks reached (5)")
+	}
 	var d struct {
 		ID int64 `json:"id"`
 	}
@@ -247,7 +250,6 @@ func (t *TauAPI) CreateWebhook(webhook Webhook) (ID int64, error error) {
 
 // DeleteWebhook - delete one webhook according to the webhook ID
 func (t *TauAPI) DeleteWebhook(ID int64) error {
-	//note extra backslash at the end. This is not normal. Fix when endpoint is fixed at the backend (issue 507 at github)
 	_, err := t.doTauRequest(&TauReq{
 		Version:   2,
 		Method:    "DELETE",
