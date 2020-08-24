@@ -5,9 +5,11 @@ import (
 	"io/ioutil"
 	"log"
 	"testing"
+
+	"github.com/99percent/gotauros/taurosapi"
 )
 
-var tauros TauApi
+var tauros taurosapi.TauAPI
 
 func init() {
 	in, err := ioutil.ReadFile("tokens.json")
@@ -19,9 +21,12 @@ func init() {
 	}
 }
 
-func TestGetWebHooks(t *testing.T) {
-	w, err := tauros.test_GetWebHooks()
+func TestCreateWebHook(t *testing.T) {
+	id, err := tauros.test_GetWebHooks()
 	if err != nil {
 		t.Errorf("%v", err)
+	}
+	if id == 0 {
+		t.Error("expected webhookid not zero")
 	}
 }
