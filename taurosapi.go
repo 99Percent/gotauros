@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httputil"
 	"strconv"
@@ -91,6 +92,16 @@ type TauWebHookObject struct {
 	DateTime            string `json:"datetime"`
 }
 
+// NewOrder - new order data
+type NewOrder struct {
+	Market        string `json:"market"`
+	Side          string `json:"side"`
+	Amount        string `json:"amount"`
+	Type          string `json:"type"`
+	Price         string `json:"price"`
+	IsAmountValue bool   `json:"is_amount_value,omitempty"`
+}
+
 // TauWsMessage - Tauros Websocket message header
 type TauWsMessage struct {
 	Title       string      `json:"title"`
@@ -124,7 +135,8 @@ type Message struct {
 
 // Order - order message struct
 type Order struct {
-	ID            int64       `json:"order_id"`
+	ID            int64       `json:"id"`       //for PlaceOrder
+	OrderID       int64       `json:"order_id"` //for GetOpenOrders
 	Market        string      `json:"market"`
 	Side          string      `json:"side"`
 	Amount        json.Number `json:"amount,Number"`
@@ -133,6 +145,7 @@ type Order struct {
 	Value         json.Number `json:"value,Number"`
 	InitialValue  json.Number `json:"initial_value,Number"`
 	Price         json.Number `json:"price,Number"`
+	FeeDecimal    json.Number `json:"fee_decimal"`
 	CreatedAt     string      `json:"created_at"`
 }
 
@@ -356,8 +369,8 @@ func (t *TauAPI) GetDepositAddress(coin string) (address string, error error) {
 }
 
 // PlaceOrder - add a new order
-func (t *TauAPI) PlaceOrder(order Message) (orderID int64, error error) {
-	jsonPostMsg, _ := json.Marshal(order)
+func (t *TauAPI) PlaceOrder(newOrder NewOrder) (Order, error) {
+	jsonPostMsg, _ := json.Marshal(newOrder)
 	jsonData, err := t.doTauRequest(&TauReq{
 		Version:   1,
 		Method:    "POST",
@@ -365,16 +378,15 @@ func (t *TauAPI) PlaceOrder(order Message) (orderID int64, error error) {
 		NeedsAuth: true,
 		PostMsg:   jsonPostMsg,
 	})
+	log.Printf("raw json of placeorder: %s", string(jsonData))
+	var o Order
 	if err != nil {
-		return 0, fmt.Errorf("PlaceOrder-> %v", err)
+		return o, fmt.Errorf("PlaceOrder-> %v", err)
 	}
-	var d struct {
-		ID int64 `json:"id"`
+	if err := json.Unmarshal(jsonData, &o); err != nil {
+		return o, fmt.Errorf("PlaceOrder-> unmarshal jsonData %v", err)
 	}
-	if err := json.Unmarshal(jsonData, &d); err != nil {
-		return 0, fmt.Errorf("PlaceOrder-> unmarshal jsonData %v", err)
-	}
-	return d.ID, nil
+	return o, nil
 }
 
 // GetOpenOrders - get all open orders by the user
@@ -401,7 +413,7 @@ func (t *TauAPI) CloseAllOrders() error {
 		return fmt.Errorf("CloseAllOrders ->%v", err)
 	}
 	for _, o := range orders {
-		if err := t.CloseOrder(o.ID); err != nil {
+		if err := t.CloseOrder(o.OrderID); err != nil {
 			return fmt.Errorf("CloseAllOrders Deleting Order %d ->%v", o.ID, err)
 		}
 	}
