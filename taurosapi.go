@@ -133,6 +133,14 @@ type Message struct {
 	Password      string `json:"password,omitempty"`
 }
 
+// TransferMsg - json for direct Tauros Transfer
+type TransferMsg struct {
+	Nip       string  `json:"nip"`
+	Coin      string  `json:"coin"`
+	Recipient string  `json:"recipient"`
+	Amount    float64 `json:"amount"`
+}
+
 // Order - order message struct
 type Order struct {
 	ID            int64       `json:"id"`       //for PlaceOrder
@@ -457,6 +465,22 @@ func (t *TauAPI) Login(email string, password string) (jwtToken string, err erro
 		return "", fmt.Errorf("Login->%v", err)
 	}
 	return d.Token, nil
+}
+
+// Transfer - direct transfer of funds to another Tauros account
+func (t *TauAPI) Transfer(transfer TransferMsg) error {
+	jsonPostMsg, _ := json.Marshal(&transfer)
+	_, err := t.doTauRequest(&TauReq{
+		Version:   2,
+		Method:    "POST",
+		Path:      "wallets/inner-transfer",
+		NeedsAuth: true,
+		PostMsg:   jsonPostMsg,
+	})
+	if err != nil {
+		return fmt.Errorf("Transfer->%v", err)
+	}
+	return nil //no need to see return post
 }
 
 func (t *TauAPI) doTauRequest(tauReq *TauReq) (msgdata json.RawMessage, e error) {

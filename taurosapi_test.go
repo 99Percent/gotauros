@@ -97,6 +97,18 @@ func TestGetBalances(t *testing.T) {
 	//todo: show non zero balances
 }
 
+func TestTransfer(t *testing.T) {
+	err = tauros.Transfer(TransferMsg{
+		Recipient: "david@montebit.com",
+		Coin:      "MXN",
+		Nip:       "119744",
+		Amount:    1.99,
+	})
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+}
+
 func TestPlaceOrder(t *testing.T) {
 	var available float64
 	for _, b := range balances {
