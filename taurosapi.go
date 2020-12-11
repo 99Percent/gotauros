@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/http/httputil"
 	"strconv"
@@ -386,7 +385,7 @@ func (t *TauAPI) PlaceOrder(newOrder NewOrder) (Order, error) {
 		NeedsAuth: true,
 		PostMsg:   jsonPostMsg,
 	})
-	log.Printf("raw json of placeorder: %s", string(jsonData))
+	//log.Printf("raw json of placeorder: %s", string(jsonData))
 	var o Order
 	if err != nil {
 		return o, fmt.Errorf("PlaceOrder-> %v", err)
