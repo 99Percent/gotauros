@@ -538,7 +538,7 @@ func (t *TauAPI) doTauRequest(tauReq *TauReq) (msgdata json.RawMessage, e error)
 			fmt.Sprintf("\nDump Request [%s]\n", dumpRequest)
 	}
 
-	client := http.Client{Timeout: time.Second * 15} //was 10 seconds, shortening to see if we go for retries
+	client := http.Client{Timeout: time.Second * 3} //was 10 seconds, shortening to see if we go for retries
 	start := time.Now()
 	resp, err := client.Do(httpReq)
 	if err != nil {
