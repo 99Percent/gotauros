@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"net/http"
 	"net/http/httputil"
 	"strconv"
@@ -161,6 +162,8 @@ type MarketOrders struct {
 	Market string `json:"market"`
 	Asks   []Order
 	Bids   []Order
+	MinAsk float64
+	MaxBid float64
 }
 
 // Coin - available coins
@@ -343,6 +346,7 @@ func (t *TauAPI) GetMarkets() (markets []Market, error error) {
 // GetMarketOrders - get current market orders for one market
 func (t *TauAPI) GetMarketOrders(market string) (MarketOrders, error) {
 	var mo MarketOrders
+	var maxBid, minAsk float64
 	jsonData, err := t.doTauRequest(&TauReq{
 		Version: 1,
 		Method:  "GET",
@@ -354,6 +358,22 @@ func (t *TauAPI) GetMarketOrders(market string) (MarketOrders, error) {
 	if err := json.Unmarshal(jsonData, &mo); err != nil {
 		return mo, err
 	}
+	maxBid = 0.0
+	for _, b := range mo.Bids {
+		bid, _ := strconv.ParseFloat(b.Price.String(), 64)
+		maxBid = math.Max(bid, maxBid)
+	}
+	if len(mo.Asks) == 0 {
+		minAsk = maxBid + 0.01
+	} else {
+		minAsk, _ = strconv.ParseFloat(mo.Asks[0].Price.String(), 64)
+		for _, a := range mo.Asks {
+			ask, _ := strconv.ParseFloat(a.Price.String(), 64)
+			minAsk = math.Min(ask, minAsk)
+		}
+	}
+	mo.MaxBid = maxBid
+	mo.MinAsk = minAsk
 	return mo, nil
 }
 

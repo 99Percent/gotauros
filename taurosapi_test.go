@@ -58,8 +58,8 @@ func TestGetMarketOrders(t *testing.T) {
 	if strings.ToLower(marketOrders.Market) != "btc-mxn" {
 		t.Errorf("returned orders of another market: %s", marketOrders.Market)
 	}
-	log.Printf("Ask Orders: %+v", marketOrders.Asks)
-	log.Printf("Bid Orders: %+v", marketOrders.Bids)
+	log.Printf("Min Ask: %8.2f", marketOrders.MinAsk)
+	log.Printf("Max Bid: %8.2f", marketOrders.MaxBid)
 }
 
 func TestDeleteWebhooks(t *testing.T) {
