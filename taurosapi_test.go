@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"strings"
 	"testing"
 )
 
@@ -46,6 +47,19 @@ func TestGetMarkets(t *testing.T) {
 		t.Error("markets available is zero")
 	}
 	//todo: show all markets
+}
+
+func TestGetMarketOrders(t *testing.T) {
+	var marketOrders MarketOrders
+	marketOrders, err = tauros.GetMarketOrders("btc-mxn")
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+	if strings.ToLower(marketOrders.Market) != "btc-mxn" {
+		t.Errorf("returned orders of another market: %s", marketOrders.Market)
+	}
+	log.Printf("Ask Orders: %+v", marketOrders.Asks)
+	log.Printf("Bid Orders: %+v", marketOrders.Bids)
 }
 
 func TestDeleteWebhooks(t *testing.T) {
@@ -130,6 +144,7 @@ func TestPlaceOrder(t *testing.T) {
 	}); err != nil {
 		t.Errorf("Unable to place order: %v", err)
 	}
+	log.Printf("Order returned is %+v", order)
 	if (order.ID == 0) || (order.ID < 0) {
 		t.Errorf("place Order ID returned zero or negative")
 	}
@@ -137,11 +152,11 @@ func TestPlaceOrder(t *testing.T) {
 }
 
 func TestCloseOrder(t *testing.T) {
-	if order.ID == 0 {
+	if order.OrderID == 0 {
 		t.Log("order not placed, skipping test")
 		t.SkipNow()
 	}
-	if err = tauros.CloseOrder(order.ID); err != nil {
-		t.Errorf("%v", err)
-	}
+	// if err = tauros.CloseOrder(order.OrderID); err != nil {
+	// 	t.Errorf("%v", err)
+	// }
 }

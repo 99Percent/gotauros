@@ -156,6 +156,13 @@ type Order struct {
 	CreatedAt     string      `json:"created_at"`
 }
 
+// MarketOrders - market orders (bids and asks) struct
+type MarketOrders struct {
+	Market string `json:"market"`
+	Asks   []Order
+	Bids   []Order
+}
+
 // Coin - available coins
 type Coin struct {
 	Coin                  string      `json:"coin"`
@@ -333,6 +340,23 @@ func (t *TauAPI) GetMarkets() (markets []Market, error error) {
 	return m, nil
 }
 
+// GetMarketOrders - get current market orders for one market
+func (t *TauAPI) GetMarketOrders(market string) (MarketOrders, error) {
+	var mo MarketOrders
+	jsonData, err := t.doTauRequest(&TauReq{
+		Version: 1,
+		Method:  "GET",
+		Path:    "trading/orders?market=" + strings.ToLower(market),
+	})
+	if err != nil {
+		return mo, fmt.Errorf("TauGetMarketOrders ->%s", err.Error())
+	}
+	if err := json.Unmarshal(jsonData, &mo); err != nil {
+		return mo, err
+	}
+	return mo, nil
+}
+
 // GetBalances - get available balances of the user
 func (t *TauAPI) GetBalances() (balances []Balance, error error) {
 	var b []Balance
@@ -487,7 +511,10 @@ func (t *TauAPI) doTauRequest(tauReq *TauReq) (msgdata json.RawMessage, e error)
 	var signatureDebugInfo string
 	var err error
 	apiVersion := fmt.Sprintf("v%1d", tauReq.Version)
-	httpReq, err = http.NewRequest(tauReq.Method, t.URL+"/api/"+apiVersion+"/"+tauReq.Path+"/", bytes.NewBuffer(tauReq.PostMsg))
+	if tauReq.NeedsAuth {
+		tauReq.Path += "/"
+	}
+	httpReq, err = http.NewRequest(tauReq.Method, t.URL+"/api/"+apiVersion+"/"+tauReq.Path, bytes.NewBuffer(tauReq.PostMsg))
 	httpReq.Body.Close()
 	if err != nil {
 		return nil, fmt.Errorf("doTauRequest-> Error on http.NewRequest: %v", err)
@@ -509,7 +536,7 @@ func (t *TauAPI) doTauRequest(tauReq *TauReq) (msgdata json.RawMessage, e error)
 			postMsg = "{}"
 		}
 		nonce = strconv.FormatInt(time.Now().UnixNano()/1e6, 10) //todo: check divide by time.millisecond
-		path = "/api/" + apiVersion + "/" + tauReq.Path + "/"
+		path = "/api/" + apiVersion + "/" + tauReq.Path          //trailing backslash must be added at each post request in path
 		message = nonce + tauReq.Method + path + postMsg
 		messageHash = sha256.Sum256([]byte(message))
 		if d, err := base64.StdEncoding.DecodeString(t.APISecret); err != nil {
@@ -538,7 +565,7 @@ func (t *TauAPI) doTauRequest(tauReq *TauReq) (msgdata json.RawMessage, e error)
 			fmt.Sprintf("\nDump Request [%s]\n", dumpRequest)
 	}
 
-	client := http.Client{Timeout: time.Second * 3} //was 10 seconds, shortening to see if we go for retries
+	client := http.Client{Timeout: time.Second * 3}
 	start := time.Now()
 	resp, err := client.Do(httpReq)
 	if err != nil {
